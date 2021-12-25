@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <link rel="stylesheet" type="text/css" href="{{ url_for('static',filename='styles/home.css') }}">
+  
+</head>
+<body>
+  <header>
+    <div class="Headerwrap">
+      <div class="logo">
+        Book Recommendation System
+      </div>
+      <nav>
+        <ul>
+          <li>
+            <a href="charts">
+              Charts
+            </a>
+          </li>
+          <li>
+            <a href="user_guide">
+              User Guide
+            </a>
+          </li>
+
+        </ul>
+      </nav>
+    </div>
+  </header>
+  <div class="FormWrap">
+    <form action="{{ url_for("system")}}" method="post">
+
+      <select name="fname" id="fname"  >
+        <option value="">Please select a book name</option>
+        {% for d in names %}
+        <option value="{{ d }}">{{ d }}</option>
+        {% endfor %}
+      </select>
+      <input type="submit" value="Submit">
+    </form>
+  </div>
+    <br>
+  <h3 class="low_heading">
+    {{my_book}}
+  </h3>
+  
+  <h2 class="heading">
+  
+    {{message}}
+  </h2>
+
+
+  <div>
+  
+    <div class="CardsWrap">
+     
+      {% for data in rec %}
+        
+        {% for d in data %}
+        
+        <div class="Card">
+          <img src= "{{ d['thumbnail'] }}" alt="img" >
+          <h5>{{ d['title'] }}</h5>
+          <p>{{ d['Author'] }} <br>{{ d['published_year'] }} <br>{{ d['average_rating'] }} </p>
+        </div>
+        {% endfor %}
+      {% endfor %}
+    </div>
+  </div>
+
+
+
+
+
+
+
+
+</body>
+
+</html>

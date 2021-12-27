@@ -1,16 +1,15 @@
-from os import name
-from werkzeug.wrappers import Request, Response
 from flask import Flask
 from flask import render_template
-from flask import url_for
 from flask import request
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt 
 import seaborn as sns
-from flask import  jsonify
 from sklearn.feature_extraction.text import CountVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
+
+
+#Reading filtered DataSet 
 df = pd.read_csv('filtered_books.csv')
 
 def gen_cos_matrix():
@@ -24,15 +23,15 @@ def gen_cos_matrix():
 
 #gen_cos_matrix() #run once, comment this line later
 cos_s = np.load('cosine_matrix.npy')
+
+#Generating Cosine Scores and then selecting top 50 reccomnedations
 def cos_scores(ind):
     similarity_scores = list(enumerate(cos_s[ind]))
-    similarity_scores = sorted(similarity_scores, key=lambda x: x[1], reverse=True)  # sort based on cosine score
-    similarity_scores = similarity_scores[1:51]  # Take top 50 cosine scores
-    return similarity_scores  # It returns list of index and its cosine score
+    similarity_scores = sorted(similarity_scores, key=lambda x: x[1], reverse=True)
+    similarity_scores = similarity_scores[1:51] 
+    return similarity_scores
 
-
-
-
+#From 50 recommendations we are filtering on the basis of average rating.
 def filter_scores(cos_scores):
     averages = []
     for i, score in cos_scores:
@@ -46,14 +45,16 @@ def filter_scores(cos_scores):
 
 
 indexes = pd.Series(df.index, index=df['title'])
+
+
+#Getting the books from indexes
 def books_names(df):
     books=[]
     for data in df['title']:
         books.append(data)
     return books
     
-
-
+#Creating a dictonary type record for the recommended books.
 def get_books_data(ind):
     book_data = []
     j = 1
@@ -71,7 +72,7 @@ def get_books_data(ind):
         j = j + 1
     return book_data
 
-
+#Integrating all the methods to create recommendations simultaneously.
 def recommendations(title):
     rec_books = []
     if title in df['title'].unique():
@@ -83,8 +84,9 @@ def recommendations(title):
         return rec_books
 
 
-
 #Chart Funtions :
+
+# Barplot for authors with most books.
 def best_authors(df):
     book_author=df.groupby('authors')['title'].count().reset_index().sort_values('title',ascending=False).head(10).set_index('authors')
     plt.figure(figsize=(15,10))
@@ -94,7 +96,7 @@ def best_authors(df):
     plt.savefig('static/images/best_authors.png')
 
 
-
+# Barpot for categories with most number of books.
 def best_category(df):
     book_category=df.groupby('categories')['title'].count().reset_index().sort_values('title',ascending=False).head(10).set_index('categories')
     plt.figure(figsize=(15,10))
@@ -103,7 +105,7 @@ def best_category(df):
     ax.set_xlabel("Total Number of Books: ")
     plt.savefig('static/images/best_category.png')
 
-
+# Barplot for year with most publisition
 def best_year(df):
     df.published_year=df.published_year.astype('string')
     book_year=df.groupby('published_year')['title'].count().reset_index().sort_values('title',ascending=False).head(10).set_index('published_year')
@@ -113,6 +115,8 @@ def best_year(df):
     ax.set_xlabel("Total Number of Books: ")
     plt.savefig('static/images/best_year.png')
 
+
+# Displot for average rating distribution for all books
 def avg_rating_distribution(df):
     fig, ax= plt.subplots(figsize=[15,10])
     sns.distplot(df['average_rating'], ax=ax)
@@ -128,14 +132,17 @@ app = Flask(__name__)
 
 def system():
     names=books_names(df)
-    if request.method == "POST" and request.form.get("fname") != "":
-       book_name = request.form.get("fname")
+    if request.method == "POST" and request.form.get("fname") != "": 
+       book_name = request.form.get("fname") #Name of a book getting from form.
        rec = recommendations(book_name)
        my_book= "You selected:  "+book_name
        message="Our Recommendations Are : "
        return render_template("home.html",rec=rec, names=names,message=message,my_book=my_book)
     else:
         return render_template("home.html",names=names)
+
+
+
 @app.route("/user_guide")
 
 def user_guide():
